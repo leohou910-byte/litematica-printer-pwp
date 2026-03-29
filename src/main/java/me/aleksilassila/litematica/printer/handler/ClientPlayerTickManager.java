@@ -20,6 +20,7 @@ public class ClientPlayerTickManager {
     public static final MineHandler MINE = new MineHandler();
     public static final FluidHandler FLUID = new FluidHandler();
     public static final BedrockHandler BEDROCK = new BedrockHandler();
+    public static final BedrockHandler DEBUGSTICK = new BedrockHandler();
 
     @Getter
     @Setter
@@ -28,7 +29,7 @@ public class ClientPlayerTickManager {
     private static long currentHandlerTime;
 
     public static final ImmutableList<ClientPlayerTickHandler> VALUES = ImmutableList.of(
-            GUI, PRINT, FILL, FLUID, MINE, BEDROCK
+            GUI, PRINT, FILL, FLUID, MINE, BEDROCK, DEBUGSTICK
     );
 
 public static void tick() {
