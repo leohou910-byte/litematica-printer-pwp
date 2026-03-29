@@ -250,6 +250,7 @@
   "litematica_printer.update.password": "下載密碼：%s",
   "litematica_printer.update.recommendation": "強烈建議升級至最新版本，以修復潛在的嚴重問題。",
   "litematica_printer.update.repository": "程式碼倉儲：",
+  "litematica_printer.config.printMode.debugStick": "除錯棒",
   "litematica_printer.config.category.debugStick": "§6除錯棒",
   "litematica_printer.config.category.debugStick.desc": "除錯棒模式相關設定",
   "litematica_printer.config.debugStick": "除錯棒",

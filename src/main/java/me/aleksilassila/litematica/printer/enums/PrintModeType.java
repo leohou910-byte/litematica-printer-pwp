@@ -10,7 +10,7 @@ public enum PrintModeType implements ConfigOptionListEntry<PrintModeType> {
     FILL("printMode.fill"),
     // REPLACE("printMode.replace"),
     BEDROCK("printMode.bedrock"),
-    DEBUGSTICK("prinerMode.debugStick");
+    DEBUGSTICK("printMode.debugStick");
 
     private final I18n i18n;
 

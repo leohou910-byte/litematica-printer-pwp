@@ -250,6 +250,7 @@
   "litematica_printer.update.password": "Download password: %s",
   "litematica_printer.update.recommendation": "Strongly recommend upgrading to latest version to fix potential serious issues.",
   "litematica_printer.update.repository": "Code repository:",
+  "litematica_printer.config.printMode.debugStick": "Debug Stick",
   "litematica_printer.config.category.debugStick": "§6Debug Stick",
   "litematica_printer.config.category.debugStick.desc": "Settings related to the Debug Stick mode.",
   "litematica_printer.config.debugStick": "Debug Stick Mode",
