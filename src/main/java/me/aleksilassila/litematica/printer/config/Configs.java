@@ -62,6 +62,7 @@ public class Configs extends ConfigBuilders implements IConfigHandler {
         optionSet.addAll(Mine.OPTIONS);           // 挖掘
         optionSet.addAll(Fill.OPTIONS);           // 填充
         optionSet.addAll(Fluid.OPTIONS);          // 排流体
+        optionSet.addAll(DebugStick.OPTIONS);     // 除錯棒
         OPTIONS = ImmutableList.copyOf(optionSet);
 
         List<IHotkey> hotkeys = new ArrayList<>();
@@ -106,6 +107,12 @@ public class Configs extends ConfigBuilders implements IConfigHandler {
 
         // 多模 - 排流体
         public static final ConfigBooleanHotkeyed FLUID = booleanHotkey("fluid")
+                .defaultValue(false)
+                .setVisible(isMulti) // 仅多模式时显示
+                .build();
+
+        // 多模 - 除錯棒
+        public static final ConfigBooleanHotkeyed DEBUG_STICK = booleanHotkey("debugStick")
                 .defaultValue(false)
                 .setVisible(isMulti) // 仅多模式时显示
                 .build();
@@ -221,6 +228,7 @@ public class Configs extends ConfigBuilders implements IConfigHandler {
                 MINE,
                 FILL,
                 FLUID,
+                DEBUG_STICK,
                 WORK_RANGE,
                 ITERATION_TIME_LIMIT,
                 RENDER_HUD,
@@ -591,6 +599,23 @@ public class Configs extends ConfigBuilders implements IConfigHandler {
         );
     }
 
+    public static class DebugStick {
+        // 選區類型
+        public static final ConfigOptionList DEBUG_STICK_SELECTION_TYPE = optionList("debugStickSelectionType")
+                .defaultValue(SelectionType.LITEMATICA_SELECTION)
+                .build();
+
+        // 目標方塊狀態名單
+        public static final ConfigStringList DEBUG_STICK_BLOCK_STATE_LIST = stringList("debugStickBlockList")
+                .defaultValue(ImmutableList.of("minecraft:piston[facing=down,extended=true]"))
+                .build();
+
+        public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
+                DEBUG_STICK_SELECTION_TYPE,       // 排流體 - 選區類型
+                DEBUG_STICK_BLOCK_STATE_LIST      // 排流體 - 目標方塊狀態名單
+        );
+    }
+
     public static class Hotkeys {
         // 打开设置菜单
         public static final ConfigHotkey OPEN_SCREEN = hotkey("openScreen")
@@ -664,6 +689,7 @@ public class Configs extends ConfigBuilders implements IConfigHandler {
                 Core.MINE,                // 挖掘
                 Core.FILL,                    // 填充
                 Core.FLUID,                  // 排流体
+                Core.DEBUG_STICK,             // 除錯棒
                 BEDROCK,                      // 破基岩
 
                 // 远程交互

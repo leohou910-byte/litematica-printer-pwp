@@ -249,5 +249,13 @@
   "litematica_printer.update.failed": "更新檢查失敗，請稍後重試。",
   "litematica_printer.update.password": "下載密碼：%s",
   "litematica_printer.update.recommendation": "強烈建議升級至最新版本，以修復潛在的嚴重問題。",
-  "litematica_printer.update.repository": "程式碼倉儲："
+  "litematica_printer.update.repository": "程式碼倉儲：",
+  "litematica_printer.config.category.debugStick": "§6除錯棒",
+  "litematica_printer.config.category.debugStick.desc": "除錯棒模式相關設定",
+  "litematica_printer.config.debugStick": "除錯棒",
+  "litematica_printer.config.debugStick.desc": "在選區範圍內，調整§6目標方塊狀態名單§r中配置的方塊狀態。",
+  "litematica_printer.config.debugStickSelectionType": "選區類型",
+  "litematica_printer.config.debugStickSelectionType.desc": "列印模式工作選區範圍規則：\n§d投影選區§r：使用投影當前選中的完整選區作為工作範圍\n§d投影渲染層§r：僅在投影當前渲染層範圍內執行列印\n§d投影選區 玩家之下§r：僅處理選區中玩家所在高度以下的區域\n§d投影選區 玩家之上§r：僅處理選區中玩家所在高度以上的區域(預設)",
+  "litematica_printer.config.debugStickBlockList": "目標方塊狀態名單",
+  "litematica_printer.config.debugStickBlockList.desc": "設定除錯棒要調整的目標方塊及其屬性，例如：§bminecraft:piston[facing=down,extended=true]§r。當印表機掃描到符合的方塊時，會自動使用除錯棒將其調整至指定狀態。"
 }
