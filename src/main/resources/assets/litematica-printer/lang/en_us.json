@@ -272,5 +272,13 @@
   "litematica_printer.update.failed": "Update check failed, please try again later.",
   "litematica_printer.update.password": "Download password: %s",
   "litematica_printer.update.recommendation": "Strongly recommend upgrading to latest version to fix potential serious issues.",
-  "litematica_printer.update.repository": "Code repository:"
+  "litematica_printer.update.repository": "Code repository:",
+  "litematica_printer.config.category.debugStick": "§6Debug Stick",
+  "litematica_printer.config.category.debugStick.desc": "Settings related to the Debug Stick mode.",
+  "litematica_printer.config.debugStick": "Debug Stick Mode",
+  "litematica_printer.config.debugStick.desc": "In the selection area, automatically adjust the block states configured in the §6Debug Stick Block List§r.",
+  "litematica_printer.config.debugStickBlockList": "Debug Stick Block List",
+  "litematica_printer.config.debugStickBlockList.desc": "Defines the target blocks and their properties to be adjusted by the Debug Stick, e.g., §bminecraft:piston[facing=down,extended=true]§r. When the printer scans a matching block, it will automatically use a Debug Stick to adjust it to the specified state.",
+  "litematica_printer.config.debugStickSelectionType": "Selection Type",
+  "litematica_printer.config.debugStickSelectionType.desc": "The selection range rules for the Debug Stick mode."
 }
