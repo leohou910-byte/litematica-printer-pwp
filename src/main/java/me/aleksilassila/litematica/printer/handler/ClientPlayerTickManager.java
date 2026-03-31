@@ -20,7 +20,7 @@ public class ClientPlayerTickManager {
     public static final MineHandler MINE = new MineHandler();
     public static final FluidHandler FLUID = new FluidHandler();
     public static final BedrockHandler BEDROCK = new BedrockHandler();
-    public static final BedrockHandler DEBUGSTICK = new BedrockHandler();
+    public static final DebugStickHandler DEBUGSTICK = new DebugStickHandler();
 
     @Getter
     @Setter
