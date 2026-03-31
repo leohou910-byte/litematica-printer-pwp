@@ -37,6 +37,9 @@ public class DebugStickHandler extends ClientPlayerTickHandler {
 
     private List<String> debugStickBlockStates = new ArrayList<>();
     private List<BlockState> blockStates = new ArrayList<>();
+    private BlockState currentState = null;
+    private BlockState targetState = null;
+
 
     public DebugStickHandler() {
         super(NAME, PrintModeType.DEBUGSTICK, Configs.Core.DEBUG_STICK, Configs.DebugStick.DEBUG_STICK_SELECTION_TYPE, true);
@@ -72,31 +75,38 @@ public class DebugStickHandler extends ClientPlayerTickHandler {
         return !this.debugStickBlockStates.isEmpty();
     }
 
+    
+    @Override
+    public boolean canProcessPos(BlockPos blockPos) {
+        if (isOnCooldown(blockPos)) {
+            return false;
+        }
+        this.currentState = level.getBlockState(blockPos);
+        this.targetState = getSameBlockBlockStates(this.currentState.getBlock(), this.blockStates);
+        return this.currentState != null && this.targetState != null && !this.currentState.equals(this.targetState);
+    }
+
     @Override
     protected void executeIteration(BlockPos blockPos, AtomicReference<Boolean> skipIteration) {
         // 取得除錯棒
         if (!player.getMainHandItem().is(Items.DEBUG_STICK) 
                 && !InventoryUtils.switchToItems(player,new Item[] { Items.DEBUG_STICK })) return;
         // 點擊方塊
-        BlockState currentState = level.getBlockState(blockPos);
-        BlockState targetState = getSameBlockBlockStates(currentState.getBlock(), this.blockStates);
-        if (targetState != null && !targetState.equals(currentState)) {
-            // 1.找出要更改的狀態(偵測到的第一個)
-            Property<?> differentState = getDifferentProperty(currentState, targetState);
-            // 2.除錯棒更改目標方塊狀態
-            Property<?> debugStickProperty = getDebugStickProperty(player, targetState);
-            // // 3.比較目標狀態與除錯棒狀態 正確再調整方塊狀態
-            if (differentState != null) {
-                if(!differentState.equals(debugStickProperty)) {
-                    if (client.gameMode == null) return;
-                    client.gameMode.startDestroyBlock(blockPos, Direction.DOWN);
-                }
-                new Action().queueAction(blockPos, Direction.DOWN, false, player);
-                if (ActionManager.INSTANCE.sendQueue(player).needWaitModifyLook) {
-                    skipIteration.set(true);
-                }
-                this.setCooldown(blockPos, ConfigUtils.getPlaceCooldown());
+        // 1.找出要更改的狀態(偵測到的第一個)
+        Property<?> differentProperty = getDifferentProperty(this.currentState, this.targetState);
+        // 2.除錯棒更改目標方塊狀態
+        Property<?> debugStickProperty = getDebugStickProperty(player, this.targetState);
+        // 3.比較目標狀態與除錯棒狀態 正確再調整方塊狀態
+        if (differentProperty != null) {
+            if(!differentProperty.equals(debugStickProperty)) {
+                if (client.gameMode == null) return;
+                client.gameMode.startDestroyBlock(blockPos, Direction.DOWN);
             }
+            new Action().queueAction(blockPos, Direction.DOWN, false, player);
+            if (ActionManager.INSTANCE.sendQueue(player).needWaitModifyLook) {
+                skipIteration.set(true);
+            }
+            this.setCooldown(blockPos, ConfigUtils.getPlaceCooldown());
         }
     }
 
