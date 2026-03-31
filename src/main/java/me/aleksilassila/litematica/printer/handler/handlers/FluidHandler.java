@@ -28,6 +28,8 @@ public class FluidHandler extends ClientPlayerTickHandler {
 
     private List<String> fluidBlocks = new ArrayList<>();
     private List<Fluid> fluids = List.of(new Fluid[0]);
+    
+    private FluidState fluidState = null;
 
     public FluidHandler() {
         super(NAME, PrintModeType.FLUID, Configs.Core.FLUID, Configs.Fluid.FLUID_SELECTION_TYPE, true);
@@ -77,20 +79,23 @@ public class FluidHandler extends ClientPlayerTickHandler {
     }
 
     @Override
+    public boolean canProcessPos(BlockPos blockPos) {
+        fluidState = level.getBlockState(blockPos).getFluidState();
+        return fluids.contains(fluidState.getType()) && fluidState.isSource();
+    }
+
+    @Override
     protected void executeIteration(BlockPos blockPos, AtomicReference<Boolean> skipIteration) {
-        FluidState fluidState = level.getBlockState(blockPos).getFluidState();
-        if (fluids.contains(fluidState.getType())) {
-            if (!Configs.Fluid.FILL_FLOWING_FLUID.getBooleanValue() && !fluidState.isSource()) {
-                return;
-            }
-            if (!InventoryUtils.switchToItems(player, fillItems.toArray(new Item[0]))) {
-                return;
-            }
-            new Action().queueAction(blockPos, Direction.UP, false, player);
-            if (ActionManager.INSTANCE.sendQueue(player).needWaitModifyLook) {
-                skipIteration.set(true);
-            }
-            setCooldown(blockPos, Fluids.WATER.getTickDelay(level) * 2);
+        if (!Configs.Fluid.FILL_FLOWING_FLUID.getBooleanValue()) {
+            return;
         }
+        if (!InventoryUtils.switchToItems(player, fillItems.toArray(new Item[0]))) {
+            return;
+        }
+        new Action().queueAction(blockPos, Direction.UP, false, player);
+        if (ActionManager.INSTANCE.sendQueue(player).needWaitModifyLook) {
+            skipIteration.set(true);
+        }
+        setCooldown(blockPos, Fluids.WATER.getTickDelay(level) * 2);
     }
 }
