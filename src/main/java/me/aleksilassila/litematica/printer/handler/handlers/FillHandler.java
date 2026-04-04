@@ -25,6 +25,9 @@ public class FillHandler extends ClientPlayerTickHandler {
     public final static String NAME = "fill";
 
     private List<String> fillCacheBlocklist = new ArrayList<>();
+    private BlockState currentState;
+    private boolean handheld;
+
     @Getter
     private Item[] fillModeItemList = new Item[0];
 
@@ -85,38 +88,38 @@ public class FillHandler extends ClientPlayerTickHandler {
 
     @Override
     public boolean canProcessPos(BlockPos blockPos) {
-        if (Configs.Fill.FILL_BLOCK_MODE.getOptionListValue() == FillBlockModeType.HANDHELD) {
+        handheld = Configs.Fill.FILL_BLOCK_MODE.getOptionListValue() == FillBlockModeType.HANDHELD;
+        currentState = level.getBlockState(blockPos);
+        // 手持物品模式 數量是否足夠
+        if (handheld) {
             ItemStack heldStack = player.getMainHandItem(); // 获取主手物品
-            return !heldStack.isEmpty() && heldStack.getCount() > 0;
+            if (heldStack.isEmpty() || !(heldStack.getCount() > 0)) {
+                return false;
+            }
         }
-        return true;
+        // 是否為空氣 或 液體 或 白名單
+        return currentState.isAir()
+                || currentState.getBlock() instanceof LiquidBlock
+                || Configs.Print.REPLACEABLE_LIST.getStrings().stream().anyMatch(s -> LitematicaUtils.matchName(s, currentState));
     }
 
     @Override
     protected void executeIteration(BlockPos blockPos, AtomicReference<Boolean> skipIteration) {
-        boolean handheld = Configs.Fill.FILL_BLOCK_MODE.getOptionListValue() == FillBlockModeType.HANDHELD;
-        BlockState currentState = level.getBlockState(blockPos);
-        if (currentState.isAir()
-                || (currentState.getBlock() instanceof LiquidBlock)
-                || Configs.Print.REPLACEABLE_LIST.getStrings().stream().anyMatch(s -> LitematicaUtils.matchName(s, currentState))
-        ) {
-            if (handheld || InventoryUtils.switchToItems(player, this.fillModeItemList)) {
-                Action action;
-                if (ConfigUtils.getFillModeFacing() != null) {
-                    action = new Action()
-                            .setLookDirection(ConfigUtils.getFillModeFacing().getOpposite())
-                            .queueAction(blockPos, ConfigUtils.getFillModeFacing(), false, player);
-                } else {
-                    action = new Action()
-                            .queueAction(blockPos, getPlayerPlacementDirection(), false, player);
-                }
-                ActionManager.INSTANCE.setLook(action.getPlayerLook());
-                if (ActionManager.INSTANCE.sendQueue(player).needWaitModifyLook){
-                    skipIteration.set(true);
-                }
-                this.setCooldown(blockPos, ConfigUtils.getPlaceCooldown());
+        if (handheld || InventoryUtils.switchToItems(player, this.fillModeItemList)) {
+            Action action;
+            if (ConfigUtils.getFillModeFacing() != null) {
+                action = new Action()
+                        .setLookDirection(ConfigUtils.getFillModeFacing().getOpposite())
+                        .queueAction(blockPos, ConfigUtils.getFillModeFacing(), false, player);
+            } else {
+                action = new Action()
+                        .queueAction(blockPos, getPlayerPlacementDirection(), false, player);
             }
+            ActionManager.INSTANCE.setLook(action.getPlayerLook());
+            if (ActionManager.INSTANCE.sendQueue(player).needWaitModifyLook){
+                skipIteration.set(true);
+            }
+            this.setCooldown(blockPos, ConfigUtils.getPlaceCooldown());
         }
     }
-
 }
