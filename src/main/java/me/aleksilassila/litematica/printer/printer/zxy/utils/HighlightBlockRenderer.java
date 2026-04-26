@@ -211,10 +211,7 @@ public class HighlightBlockRenderer implements IRenderer {
         clearList.clear();
 
         shaderIng = true;
-        highlightTheProjectMap.entrySet().stream().parallel().forEach(stringHighlightTheProjectEntry -> {
-            String key = stringHighlightTheProjectEntry.getKey();
-            HighlightTheProject value = stringHighlightTheProjectEntry.getValue();
-
+        highlightTheProjectMap.forEach((key,value)->{
             Color4f color = value.color4f.getColor();
             test3(matrices, color, value.pos);
 

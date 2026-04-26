@@ -3,12 +3,17 @@ package me.aleksilassila.litematica.printer.config;
 import fi.dy.masa.malilib.hotkeys.IKeybind;
 import fi.dy.masa.malilib.hotkeys.KeyAction;
 import me.aleksilassila.litematica.printer.I18n;
+import fi.dy.masa.malilib.gui.GuiBase;
 import me.aleksilassila.litematica.printer.gui.ConfigUi;
+import me.aleksilassila.litematica.printer.pinkywolfy.ContainerMaterialList;
+import me.aleksilassila.litematica.printer.pinkywolfy.ContainerMaterialListScreen;
+import me.aleksilassila.litematica.printer.pinkywolfy.SchematicSync;
 import me.aleksilassila.litematica.printer.printer.zxy.utils.ZxyUtils;
 import me.aleksilassila.litematica.printer.utils.MessageUtils;
 import net.minecraft.client.Minecraft;
 
 //#if MC >= 12001 
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import me.aleksilassila.litematica.printer.printer.zxy.inventory.OpenInventoryPacket;
@@ -35,6 +40,27 @@ public class HotkeysCallback {
         if (key == Configs.Hotkeys.OPEN_SCREEN.getKeybind()) {
             client.setScreen(new ConfigUi());
             return true;
+        }
+
+        if (key == Configs.Hotkeys.SINGLE_SCHEMATIC_SYNC.getKeybind()) {
+            SchematicSync.startSingleSchematicSyncInventory();
+            return true;
+        }
+        if (key == Configs.Hotkeys.MULTIPLE_SCHEMATIC_SYNC.getKeybind()) {
+            SchematicSync.startMultipleSchematicSyncInventory();
+            return true;
+        }
+        if (key == Configs.Hotkeys.OPEN_Schematic_SYNC_MATERIAL_LIST.getKeybind()) {
+            // 這裡建議判斷 client.screen == null，確保只在非選單畫面觸發
+            if (client.screen == null) {
+                // 建立數據源並執行統計
+                ContainerMaterialList schematicSyncContainerMaterialList = new ContainerMaterialList();
+                schematicSyncContainerMaterialList.reCreateMaterialList();
+
+                // 使用 maLiLib 的方式開啟 GUI
+                GuiBase.openGui(new ContainerMaterialListScreen(schematicSyncContainerMaterialList));
+                return true;
+            }
         }
 
         if (key == Configs.Hotkeys.SYNC_INVENTORY.getKeybind()) {

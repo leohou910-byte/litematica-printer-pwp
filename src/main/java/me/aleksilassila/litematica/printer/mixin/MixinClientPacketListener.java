@@ -1,5 +1,6 @@
 package me.aleksilassila.litematica.printer.mixin;
 
+import me.aleksilassila.litematica.printer.pinkywolfy.SchematicSync;
 import me.aleksilassila.litematica.printer.printer.zxy.inventory.InventoryUtils;
 import me.aleksilassila.litematica.printer.printer.zxy.inventory.SwitchItem;
 import net.minecraft.client.Minecraft;
@@ -30,6 +31,11 @@ public abstract class MixinClientPacketListener {
         }
         if (ZxyUtils.num == 1 || ZxyUtils.num == 3) {
             ZxyUtils.syncInv();
+        }
+        if (SchematicSync.schematicSyncState == SchematicSync.SchematicSyncState.FIND_AND_CHECK_CONTAINER) {
+            SchematicSync.openRetryTimer = 0;
+            SchematicSync.schematicSyncState = SchematicSync.SchematicSyncState.FILLING_CONTAINER;
+            SchematicSync.schematicSyncInv();
         }
     }
 }
