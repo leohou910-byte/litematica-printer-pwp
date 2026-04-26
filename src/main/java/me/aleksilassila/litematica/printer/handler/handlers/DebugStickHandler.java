@@ -10,7 +10,6 @@ import me.aleksilassila.litematica.printer.printer.ActionManager;
 import me.aleksilassila.litematica.printer.printer.action.Action;
 import me.aleksilassila.litematica.printer.utils.ConfigUtils;
 import me.aleksilassila.litematica.printer.utils.InventoryUtils;
-import me.aleksilassila.litematica.printer.utils.MessageUtils;
 import net.minecraft.world.level.block.Block;
 
 import me.aleksilassila.litematica.printer.config.Configs;

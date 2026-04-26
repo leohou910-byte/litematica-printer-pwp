@@ -219,6 +219,33 @@ public class Configs extends ConfigBuilders implements IConfigHandler {
                 .defaultValue("#4CFF4CE6")
                 .build();
 
+        // 藍圖容器同步頻率
+        public static final ConfigInteger SYNC_INVENTORY_RATE = integer("syncInventoryRate")
+                .defaultValue(2)
+                .range(1, 20)
+                .build();
+
+        // 藍圖容器同步開啟超時
+        public static final ConfigInteger RETRY_THRESHOLD = integer("retryThreshold")
+                .defaultValue(40)
+                .range(0, 100)
+                .build();
+
+        // 藍圖容器同步 - 即將同步容器顏色
+        public static final ConfigColor SCHEMATIC_SYNC_INVENTORY_TARGET_COLOR = color("schematicSyncInventoryTargetColor")
+                .defaultValue("#80FF4CE6")
+                .build();
+
+        // 藍圖容器同步 - 缺少物品容器顏色
+        public static final ConfigColor SCHEMATIC_SYNC_INVENTORY_MISSING_COLOR = color("schematicSyncInventoryMissingColor")
+                .defaultValue("#804CEAFF")
+                .build();
+
+        // 藍圖容器同步 - 錯誤容器顏色
+        public static final ConfigColor SCHEMATIC_SYNC_INVENTORY_ERROR_COLOR = color("schematicSyncInventoryErrorColor")
+                .defaultValue("#80FF4C4C")
+                .build();
+
         // 通用配置项列表（按功能分类排序）
         public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(
                 WORK_SWITCH,
@@ -246,7 +273,12 @@ public class Configs extends ConfigBuilders implements IConfigHandler {
                 CLOUD_INVENTORY,
                 AUTO_INVENTORY,
                 INVENTORY_LIST,
-                SYNC_INVENTORY_COLOR
+                SYNC_INVENTORY_COLOR,
+                SYNC_INVENTORY_RATE,
+                RETRY_THRESHOLD,
+                SCHEMATIC_SYNC_INVENTORY_TARGET_COLOR,
+                SCHEMATIC_SYNC_INVENTORY_MISSING_COLOR,
+                SCHEMATIC_SYNC_INVENTORY_ERROR_COLOR
         );
     }
 
@@ -648,6 +680,19 @@ public class Configs extends ConfigBuilders implements IConfigHandler {
                 .defaultValue(false)
                 .build();
 
+        // 單獨容器同步热键
+        public static final ConfigHotkey SINGLE_SCHEMATIC_SYNC = hotkey("singleSyncInventory")
+                .build();
+
+        // 多重容器同步热键
+        public static final ConfigHotkey MULTIPLE_SCHEMATIC_SYNC = hotkey("multipleSchematicSyncInventory")
+                .build();
+
+        // 開啟藍圖容器同步材料列表的熱鍵
+        public static final ConfigHotkey OPEN_Schematic_SYNC_MATERIAL_LIST = hotkey("openSyncMaterialList")
+                .defaultStorageString("N,L") // 預設按鍵
+                .build();
+
         // ========== 远程交互热键 ==========
 
         // 设置打印机库存热键
@@ -691,6 +736,11 @@ public class Configs extends ConfigBuilders implements IConfigHandler {
                 Core.FLUID,                  // 排流体
                 Core.DEBUG_STICK,             // 除錯棒
                 BEDROCK,                      // 破基岩
+
+                // 藍圖同步
+                SINGLE_SCHEMATIC_SYNC,    // 單獨容器同步
+                MULTIPLE_SCHEMATIC_SYNC,  // 多重容器同步
+                OPEN_Schematic_SYNC_MATERIAL_LIST,  // 開啟藍圖容器同步材料列表
 
                 // 远程交互
                 SYNC_INVENTORY,               // 同步容器热键

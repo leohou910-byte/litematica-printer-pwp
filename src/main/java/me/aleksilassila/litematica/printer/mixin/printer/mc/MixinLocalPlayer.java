@@ -5,6 +5,7 @@ import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
 import me.aleksilassila.litematica.printer.config.Configs;
 import me.aleksilassila.litematica.printer.handler.ClientPlayerTickManager;
+import me.aleksilassila.litematica.printer.pinkywolfy.SchematicSync;
 import me.aleksilassila.litematica.printer.printer.BlockPosCooldownManager;
 import me.aleksilassila.litematica.printer.printer.zxy.inventory.InventoryUtils;
 import me.aleksilassila.litematica.printer.utils.LitematicaUtils;
@@ -82,6 +83,7 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
         BlockPosCooldownManager.INSTANCE.tick();
         InventoryUtils.tick();
         ZxyUtils.tick();
+        SchematicSync.tick();
         LitematicaUtils.INSTANCE.preprocess();
         if (LitematicaUtils.INSTANCE.isNeedHandle()) {
             LitematicaUtils.INSTANCE.onTick();
