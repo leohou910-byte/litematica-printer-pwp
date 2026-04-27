@@ -1,4 +1,4 @@
-package me.aleksilassila.litematica.printer.pinkywolfy;
+package me.aleksilassila.litematica.printer.PinkyWolfy;
 
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.selection.AreaSelection;
@@ -109,6 +109,12 @@ public class SchematicSync {
             for (VoxelShape shape : collisions) {
                 // 如果那一格不是空氣（且不是可穿過的方塊），才判定為阻擋
                 if (!shape.isEmpty()) {
+                    // 如果撞到的方塊座標就是界伏盒本身所在的座標，代表這是界伏盒自己的蓋子
+                    AABB shapeBounds = shape.bounds();
+                    BlockPos collisionPos = BlockPos.containing(shapeBounds.getCenter());
+                    if (collisionPos.equals(pos)) {
+                        continue;
+                    }
                     return new ContainerResult(false, "界伏盒開啟方向有其他方塊阻擋");
                 }
             }
@@ -262,6 +268,11 @@ public class SchematicSync {
         highlightTargetPosList = HighlightBlockRenderer.getHighlightBlockPosList(schematicSyncTarget);
         highlightMissingPosList = HighlightBlockRenderer.getHighlightBlockPosList(schematicSyncMissing);
         highlightErrorPosList = HighlightBlockRenderer.getHighlightBlockPosList(schematicSyncError);
+
+
+        highlightTargetPosList.clear();
+        highlightMissingPosList.clear();
+        highlightErrorPosList.clear();
     }
 
     // 開始單獨藍圖容器同步
