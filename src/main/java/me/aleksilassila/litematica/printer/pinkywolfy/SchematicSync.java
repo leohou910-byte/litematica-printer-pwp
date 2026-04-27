@@ -111,7 +111,11 @@ public class SchematicSync {
                 if (!shape.isEmpty()) {
                     // 如果撞到的方塊座標就是界伏盒本身所在的座標，代表這是界伏盒自己的蓋子
                     AABB shapeBounds = shape.bounds();
+                    //#if MC >= 11900
                     BlockPos collisionPos = BlockPos.containing(shapeBounds.getCenter());
+                    //#else
+                    //$$ BlockPos collisionPos = new BlockPos(shapeBounds.getCenter());
+                    //#endif
                     if (collisionPos.equals(pos)) {
                         continue;
                     }
@@ -392,8 +396,18 @@ public class SchematicSync {
                 }
 
                 List<String> names = missingItems.entrySet().stream()
-                        .map(e -> Component.translatable(e.getKey().getDescriptionId()).getString() + " x" + e.getValue())
+                        .map(e -> {
+                            //#if MC >= 11900
+                            return net.minecraft.network.chat.Component.translatable(e.getKey().getDescriptionId()).getString() + " x" + e.getValue();
+                            //#else
+                            //$$ return new net.minecraft.network.chat.TranslatableComponent(e.getKey().getDescriptionId()).getString() + " x" + e.getValue();
+                            //#endif
+                        })
+                        //#if MC >= 11900
                         .toList();
+                //#else
+                //$$ .collect(java.util.stream.Collectors.toList());
+                //#endif
 
                 String display;
                 if (names.size() > 3) {
