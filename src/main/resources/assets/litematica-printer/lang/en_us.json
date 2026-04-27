@@ -258,5 +258,21 @@
   "litematica_printer.config.debugStickBlockList": "Debug Stick Block List",
   "litematica_printer.config.debugStickBlockList.desc": "Defines the target blocks and their properties to be adjusted by the Debug Stick, e.g., §bminecraft:piston[facing=down,extended=true]§r. When the printer scans a matching block, it will automatically use a Debug Stick to adjust it to the specified state.",
   "litematica_printer.config.debugStickSelectionType": "Selection Type",
-  "litematica_printer.config.debugStickSelectionType.desc": "The selection range rules for the Debug Stick mode."
+  "litematica_printer.config.debugStickSelectionType.desc": "The selection range rules for the Debug Stick mode.",
+  "litematica_printer.config.syncInventoryRate": "Schematic Sync Rate (Ticks)",
+  "litematica_printer.config.syncInventoryRate.desc": "The interval (in ticks) between synchronization actions. Lower values are faster but may cause server desync.",
+  "litematica_printer.config.retryThreshold": "Sync Open Timeout (Ticks)",
+  "litematica_printer.config.retryThreshold.desc": "Maximum time to wait for a container to open before retrying or marking as an error.",
+  "litematica_printer.config.schematicSyncInventoryTargetColor": "Sync Target Color",
+  "litematica_printer.config.schematicSyncInventoryTargetColor.desc": "Highlight color for containers that are queued for synchronization.",
+  "litematica_printer.config.schematicSyncInventoryMissingColor": "Sync Missing Items Color",
+  "litematica_printer.config.schematicSyncInventoryMissingColor.desc": "Highlight color for containers that are missing required items from the schematic.",
+  "litematica_printer.config.schematicSyncInventoryErrorColor": "Sync Error Color",
+  "litematica_printer.config.schematicSyncInventoryErrorColor.desc": "Highlight color for containers that cannot be opened or have other synchronization issues.",
+  "litematica_printer.config.singleSyncInventory": "Single Container Sync",
+  "litematica_printer.config.singleSyncInventory.desc": "Hotkey to synchronize only the container you are currently looking at.",
+  "litematica_printer.config.multipleSchematicSyncInventory": "Multiple Container Sync",
+  "litematica_printer.config.multipleSchematicSyncInventory.desc": "Hotkey to start a batch synchronization process for all containers within the current schematic selection.",
+  "litematica_printer.config.openSyncMaterialList": "Open Sync Material List",
+  "litematica_printer.config.openSyncMaterialList.desc": "Displays a list of materials required to complete the synchronization for the selected containers."
 }
