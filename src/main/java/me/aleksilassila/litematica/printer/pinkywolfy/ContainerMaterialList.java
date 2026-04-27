@@ -76,7 +76,11 @@ public class ContainerMaterialList extends MaterialListBase {
         // 使用 getContainerSize() 獲取總槽位數 (通常是 36 個主背包槽位)
         if (client.player == null) return 0;
         int count = 0;
+        //#if MC >= 12105
         for (ItemStack stack : client.player.getInventory()) {
+        //#else
+        //$$ for (ItemStack stack : client.player.getInventory().items) {
+        //#endif
             if (!stack.isEmpty() && stack.getItem() == targetItem) {
                 count += stack.getCount();
             }

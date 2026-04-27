@@ -15,7 +15,10 @@ public class ContainerMaterialListScreen extends GuiMaterialList {
     @Override
     @NotNull
     public Component getTitle() {
-        // 透過 Getter 獲取，而不是直接訪問變數
+        //#if MC >= 11900
         return Component.literal(this.getMaterialList().getTitle());
+        //#else
+        //$$ return new net.minecraft.network.chat.TextComponent(this.getMaterialList().getTitle());
+        //#endif
     }
 }
