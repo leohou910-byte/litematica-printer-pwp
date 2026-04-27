@@ -4,13 +4,13 @@ import fi.dy.masa.malilib.hotkeys.IKeybind;
 import fi.dy.masa.malilib.hotkeys.KeyAction;
 import fi.dy.masa.malilib.gui.GuiBase;
 import me.aleksilassila.litematica.printer.gui.ConfigUi;
-import me.aleksilassila.litematica.printer.pinkywolfy.ContainerMaterialList;
-import me.aleksilassila.litematica.printer.pinkywolfy.ContainerMaterialListScreen;
-import me.aleksilassila.litematica.printer.pinkywolfy.SchematicSync;
+import me.aleksilassila.litematica.printer.PinkyWolfy.ContainerMaterialList;
+import me.aleksilassila.litematica.printer.PinkyWolfy.ContainerMaterialListScreen;
+import me.aleksilassila.litematica.printer.PinkyWolfy.SchematicSync;
 import me.aleksilassila.litematica.printer.printer.zxy.utils.ZxyUtils;
 import net.minecraft.client.Minecraft;
 
-//#if MC >= 12001 
+//#if MC >= 12001
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
