@@ -281,5 +281,21 @@
   "litematica_printer.config.debugStickSelectionType": "選區類型",
   "litematica_printer.config.debugStickSelectionType.desc": "列印模式工作選區範圍規則：\n§d投影選區§r：使用投影當前選中的完整選區作為工作範圍\n§d投影渲染層§r：僅在投影當前渲染層範圍內執行列印\n§d投影選區 玩家之下§r：僅處理選區中玩家所在高度以下的區域\n§d投影選區 玩家之上§r：僅處理選區中玩家所在高度以上的區域(預設)",
   "litematica_printer.config.debugStickBlockList": "目標方塊狀態名單",
-  "litematica_printer.config.debugStickBlockList.desc": "設定除錯棒要調整的目標方塊及其屬性，例如：§bminecraft:piston[facing=down,extended=true]§r。\n當印表機掃描到符合的方塊時，會自動使用除錯棒將其調整至指定狀態。"
+  "litematica_printer.config.debugStickBlockList.desc": "設定除錯棒要調整的目標方塊及其屬性，例如：§bminecraft:piston[facing=down,extended=true]§r。\n當印表機掃描到符合的方塊時，會自動使用除錯棒將其調整至指定狀態。",
+  "litematica_printer.config.syncInventoryRate": "藍圖容器同步頻率 (Tick)",
+  "litematica_printer.config.syncInventoryRate.desc": "兩次同步動作之間的時間間隔。數值愈小愈快，但可能導致伺服器不同步。",
+  "litematica_printer.config.retryThreshold": "容器開啟超時 (Tick)",
+  "litematica_printer.config.retryThreshold.desc": "嘗試開啟容器的最大等待時間，超過此時間將重試或標記為錯誤。",
+  "litematica_printer.config.schematicSyncInventoryTargetColor": "待同步容器顏色",
+  "litematica_printer.config.schematicSyncInventoryTargetColor.desc": "已加入同步隊列，準備處理的容器高亮顏色。",
+  "litematica_printer.config.schematicSyncInventoryMissingColor": "缺少物品容器顏色",
+  "litematica_printer.config.schematicSyncInventoryMissingColor.desc": "當容器內缺少藍圖所需物品時顯示的高亮顏色。",
+  "litematica_printer.config.schematicSyncInventoryErrorColor": "同步錯誤容器顏色",
+  "litematica_printer.config.schematicSyncInventoryErrorColor.desc": "當容器無法開啟（如被方塊阻擋或距離過遠）時顯示的高亮顏色。",
+  "litematica_printer.config.singleSyncInventory": "單一容器同步",
+  "litematica_printer.config.singleSyncInventory.desc": "同步目前準星所指向的單個容器。",
+  "litematica_printer.config.multipleSchematicSyncInventory": "多重容器同步",
+  "litematica_printer.config.multipleSchematicSyncInventory.desc": "對目前藍圖選區內的所有容器進行批量同步處理。",
+  "litematica_printer.config.openSyncMaterialList": "開啟同步材料清單",
+  "litematica_printer.config.openSyncMaterialList.desc": "開啟介面以查看完成當前容器同步所需的材料統計。"
 }

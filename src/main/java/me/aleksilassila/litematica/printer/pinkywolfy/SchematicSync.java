@@ -6,9 +6,7 @@ import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
 import me.aleksilassila.litematica.printer.config.Configs;
-import me.aleksilassila.litematica.printer.printer.PlacementGuide;
 import me.aleksilassila.litematica.printer.printer.PrinterBox;
-import me.aleksilassila.litematica.printer.printer.PrinterUtils;
 import me.aleksilassila.litematica.printer.printer.action.Action;
 import me.aleksilassila.litematica.printer.printer.zxy.inventory.InventoryUtils;
 import me.aleksilassila.litematica.printer.printer.zxy.utils.HighlightBlockRenderer;
@@ -28,8 +26,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.*;
 
@@ -78,26 +78,11 @@ public class SchematicSync {
         return containerPositions;
     }
 
-//     // 是否與藍圖相同
-//    public static boolean doesBlockMatchesSchematicBlock(BlockPos pos) {
-//        if (client.level == null) return false;
-//
-//        WorldSchematic schematicWorld = SchematicWorldHandler.getSchematicWorld();
-//        if (schematicWorld == null) return false;
-//
-//        BlockState realblockState = client.level.getBlockState(pos);
-//        BlockState schematicBlockState = schematicWorld.getBlockState(pos);
-//        if (!schematicBlockState.is(realblockState.getBlock())) {
-//            return false;
-//        }
-//
-//        return true;
-//    }
-
     // 是否能開啟容器
     public static ContainerResult canContainerOpen(BlockPos pos) {
-        if (client.level == null) return new ContainerResult(false, "地圖尚未載入");
-        ;
+        if (pos == null || client.level == null) {
+            return new ContainerResult(false, "地圖尚未載入或座標無效");
+        }
         BlockState blockState = client.level.getBlockState(pos);
         BlockEntity blockEntity = client.level.getBlockEntity(pos);
         boolean getMenuProvider = !(blockState.getMenuProvider(client.level, pos) == null);
@@ -107,22 +92,25 @@ public class SchematicSync {
             return new ContainerResult(false, "無法獲取容器選單");
         }
 
-        //界伏盒特殊處理
-        if (blockEntity instanceof ShulkerBoxBlockEntity entity) {
-            // 取得界伏盒打開時會經過的空間範圍
-            boolean isPathClear = client.level.noCollision(
+        // 界伏盒特殊處理
+        if (blockEntity instanceof ShulkerBoxBlockEntity) {
+            // 取得界伏盒開啟時會佔用的 AABB 範圍
+            AABB shulkerOpenAabb =
                     //#if MC > 12103
-                    Shulker.getProgressDeltaAabb(1.0F, blockState.getValue(FACING), 0.0F, 0.5F, pos.getBottomCenter()).deflate(1.0E-6)
+                    Shulker.getProgressDeltaAabb(1.0F, blockState.getValue(FACING), 0.0F, 0.5F, pos.getBottomCenter()).deflate(1.0E-6);
                     //#elseif MC <= 12103 && MC > 12004
-                    //$$ Shulker.getProgressDeltaAabb(1.0F, blockState.getValue(FACING), 0.0F, 0.5F).move(pos).deflate(1.0E-6)
+                    //$$ Shulker.getProgressDeltaAabb(1.0F, blockState.getValue(FACING), 0.0F, 0.5F).move(pos).deflate(1.0E-6);
                     //#elseif MC <= 12004
-                    //$$ Shulker.getProgressDeltaAabb(blockState.getValue(FACING), 0.0f, 0.5f).move(pos).deflate(1.0E-6)
+                    //$$ Shulker.getProgressDeltaAabb(blockState.getValue(FACING), 0.0f, 0.5f).move(pos).deflate(1.0E-6);
                     //#endif
-            );
 
-            // 判斷界伏盒開啟方向是否被阻擋
-            if (!isPathClear) {
-                return new ContainerResult(false, "界伏盒開啟方向有方塊阻擋");
+            // 檢測該範圍內是否有除了自己以外的方塊碰撞
+            Iterable<VoxelShape> collisions = client.level.getBlockCollisions(null, shulkerOpenAabb); // 使用 getBlockCollisions 獲取範圍內所有方塊的形狀
+            for (VoxelShape shape : collisions) {
+                // 如果那一格不是空氣（且不是可穿過的方塊），才判定為阻擋
+                if (!shape.isEmpty()) {
+                    return new ContainerResult(false, "界伏盒開啟方向有其他方塊阻擋");
+                }
             }
         }
 
@@ -155,7 +143,7 @@ public class SchematicSync {
     }
 
     // 填充並回傳缺少物品
-    public static Map<Item, Integer> fillContainerAndReturnMissing(BlockPos pos, NonNullList<ItemStack> schematicContainerItemsNonNullList) {
+    public static Map<Item, Integer> fillContainerAndReturnMissing(NonNullList<ItemStack> schematicContainerItemsNonNullList) {
         Map<Item, Integer> misItems = new HashMap<>();
 
         if (client.player == null || client.gameMode == null) return misItems;
@@ -195,9 +183,9 @@ public class SchematicSync {
 
                 // 拿取物品
                 int playerItemCount = playerItem.getCount();
+                // 拿取背包物品，不管如何都要先拿起
+                client.gameMode.handleInventoryMouseClick(sc.containerId, j, 0, ClickType.PICKUP, client.player);
                 if (tarNum - currNum >= playerItemCount) { // 可直接全部移入
-                    // 拿取背包物品
-                    client.gameMode.handleInventoryMouseClick(sc.containerId, j, 0, ClickType.PICKUP, client.player);
                     // 把手上的全部放到箱子
                     client.gameMode.handleInventoryMouseClick(sc.containerId, i, 0, ClickType.PICKUP, client.player);
                     currNum += playerItemCount;
@@ -206,8 +194,6 @@ public class SchematicSync {
                         client.gameMode.handleInventoryMouseClick(sc.containerId, j, 0, ClickType.PICKUP, client.player);
                     }
                 } else { // 需要一個一個移入
-                    // 拿取背包物品
-                    client.gameMode.handleInventoryMouseClick(sc.containerId, j, 0, ClickType.PICKUP, client.player);
                     // 一個一個移入
                     for (; currNum < tarNum && playerItemCount > 0; playerItemCount--) {
                         client.gameMode.handleInventoryMouseClick(sc.containerId, i, 1, ClickType.PICKUP, client.player);
@@ -326,6 +312,7 @@ public class SchematicSync {
                 }
 
                 if (tempBlockPos != null && ConfigUtils.canInteracted(tempBlockPos)) {
+                    // 優先使用沒確認的方塊座標
                     blockPos = tempBlockPos;
                 } else {
                     // 尋找第一個可觸碰的方塊
@@ -370,11 +357,13 @@ public class SchematicSync {
 
                 // 執行填充邏輯
                 NonNullList<ItemStack> schematicContainerItemsNonNullList = getContainerItemsFromSchematic(blockPos);
-                missingItems = fillContainerAndReturnMissing(blockPos, schematicContainerItemsNonNullList);
+                missingItems = fillContainerAndReturnMissing(schematicContainerItemsNonNullList);
 
                 // 根據不同情況，渲染箱子顏色，切換到不同狀態機
+                schematicSyncList.remove(blockPos);
                 highlightTargetPosList.remove(blockPos);
                 if (missingItems.isEmpty()) { // 同步完成可以進入下一個
+                    tempBlockPos = null;
                     schematicSyncState = SchematicSyncState.FIND_AND_CHECK_CONTAINER;
                 } else { // 需要等待物品
                     tempBlockPos = blockPos;
