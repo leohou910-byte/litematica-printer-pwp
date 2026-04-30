@@ -6,13 +6,13 @@ import fi.dy.masa.litematica.selection.Box;
 import fi.dy.masa.litematica.world.SchematicWorldHandler;
 import fi.dy.masa.litematica.world.WorldSchematic;
 import me.aleksilassila.litematica.printer.config.Configs;
+import me.aleksilassila.litematica.printer.printer.ActionManager;
+import me.aleksilassila.litematica.printer.printer.PlayerLook;
 import me.aleksilassila.litematica.printer.printer.PrinterBox;
-import me.aleksilassila.litematica.printer.printer.action.Action;
 import me.aleksilassila.litematica.printer.printer.zxy.inventory.InventoryUtils;
 import me.aleksilassila.litematica.printer.printer.zxy.utils.HighlightBlockRenderer;
 import me.aleksilassila.litematica.printer.utils.ConfigUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
@@ -21,15 +21,17 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.*;
+
+//#if MC < 11900
+//$$ import net.minecraft.network.chat.TranslatableComponent;
+//#endif
 
 import java.util.*;
 
@@ -93,34 +95,22 @@ public class SchematicSync {
         }
 
         // 界伏盒特殊處理
-        if (blockEntity instanceof ShulkerBoxBlockEntity) {
-            // 取得界伏盒開啟時會佔用的 AABB 範圍
-            AABB shulkerOpenAabb =
+        if (blockEntity instanceof ShulkerBoxBlockEntity shulkerEntity) {
+            Direction facing = blockState.getValue(FACING);
+
+            // 檢查是否有實體或方塊阻擋蓋子彈出空間
+            boolean isBlocked =
                     //#if MC > 12103
-                    Shulker.getProgressDeltaAabb(1.0F, blockState.getValue(FACING), 0.0F, 0.5F, pos.getBottomCenter()).deflate(1.0E-6);
+                    !client.level.noCollision(Shulker.getProgressDeltaAabb(1.0F, facing, 0.0F, 0.5F, pos.getBottomCenter()).deflate(1.0E-6));
                     //#elseif MC <= 12103 && MC > 12004
-                    //$$ Shulker.getProgressDeltaAabb(1.0F, blockState.getValue(FACING), 0.0F, 0.5F).move(pos).deflate(1.0E-6);
+                    //$$ !client.level.noCollision(Shulker.getProgressDeltaAabb(1.0F, facing, 0.0F, 0.5F).move(pos).deflate(1.0E-6));
                     //#elseif MC <= 12004
-                    //$$ Shulker.getProgressDeltaAabb(blockState.getValue(FACING), 0.0f, 0.5f).move(pos).deflate(1.0E-6);
+                    //$$ !client.level.noCollision(Shulker.getProgressDeltaAabb(facing, 0.0f, 0.5f).move(pos).deflate(1.0E-6));
                     //#endif
 
-            // 檢測該範圍內是否有除了自己以外的方塊碰撞
-            Iterable<VoxelShape> collisions = client.level.getBlockCollisions(null, shulkerOpenAabb); // 使用 getBlockCollisions 獲取範圍內所有方塊的形狀
-            for (VoxelShape shape : collisions) {
-                // 如果那一格不是空氣（且不是可穿過的方塊），才判定為阻擋
-                if (!shape.isEmpty()) {
-                    // 如果撞到的方塊座標就是界伏盒本身所在的座標，代表這是界伏盒自己的蓋子
-                    AABB shapeBounds = shape.bounds();
-                    //#if MC >= 11900
-                    BlockPos collisionPos = BlockPos.containing(shapeBounds.getCenter());
-                    //#else
-                    //$$ BlockPos collisionPos = new BlockPos(shapeBounds.getCenter());
-                    //#endif
-                    if (collisionPos.equals(pos)) {
-                        continue;
-                    }
-                    return new ContainerResult(false, "界伏盒開啟方向有其他方塊阻擋");
-                }
+            // 如果蓋子已經是開的（例如正要關上），通常不需要判定為阻擋
+            if (isBlocked && shulkerEntity.getAnimationStatus() == ShulkerBoxBlockEntity.AnimationStatus.CLOSED) {
+                return new ContainerResult(false, "界伏盒開啟方向有阻擋");
             }
         }
 
@@ -144,12 +134,50 @@ public class SchematicSync {
         return NonNullList.create();
     }
 
-    // 開啟容器
-    public static void openContainer(BlockPos pos){
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) return;
+    /**
+     * 強制玩家視線鎖定目標方塊並執行點擊操作以開啟容器。
+     *
+     * @param pos 目標方塊的座標 (BlockPos)
+     */
+    public static void openContainer(BlockPos pos) {
+        if (client.player == null || client.gameMode == null || pos == null) return;
 
-        new Action().queueAction(pos, Direction.DOWN, false, player);
+        // 若已開啟其他非背包 UI，先關閉
+        if (!client.player.containerMenu.equals(client.player.inventoryMenu)) {
+            client.player.closeContainer();
+        }
+
+        // 2. 視線計算
+        Vec3 targetVec = Vec3.atCenterOf(pos);
+        PlayerLook targetLook = getPlayerLook(targetVec);
+
+        // 檢查 getPlayerLook 是否因為 player 為 null 而回傳了 null
+        if (targetLook != null) {
+            ActionManager.INSTANCE.setLook(targetLook);
+        }
+
+        // 3. 執行點擊動作
+        ActionManager.INSTANCE.queueClick(
+                pos,
+                Direction.UP,
+                new Vec3(0.5, 0.5, 0.5),
+                false
+        );
+    }
+
+    private static PlayerLook getPlayerLook(Vec3 targetVec) {
+        if (client.player == null || targetVec == null) return null;
+
+        double dx = targetVec.x - client.player.getX();
+        // 使用 getEyeY() 而不是 getY()，這樣旋轉角度（Pitch）才會準確指向方塊
+        double dy = targetVec.y - client.player.getEyeY();
+        double dz = targetVec.z - client.player.getZ();
+        double distance = Math.sqrt(dx * dx + dz * dz);
+
+        float yaw = (float) (Math.toDegrees(Math.atan2(dz, dx)) - 90.0);
+        float pitch = (float) (-Math.toDegrees(Math.atan2(dy, distance)));
+
+        return new PlayerLook(yaw, pitch);
     }
 
     // 填充並回傳缺少物品
@@ -157,70 +185,83 @@ public class SchematicSync {
         Map<Item, Integer> misItems = new HashMap<>();
 
         if (client.player == null || client.gameMode == null) return misItems;
+
         AbstractContainerMenu sc = client.player.containerMenu;
 
-        int containerActualSize = sc.slots.getFirst().container.getContainerSize();
-        int size = Math.min(schematicContainerItemsNonNullList.size(), containerActualSize);
+        Container targetContainer = sc.slots.get(0).container;
+        int containerSize = targetContainer.getContainerSize();
 
-        for (int i = 0; i < size; i++) {
-            ItemStack item1 = sc.slots.get(i).getItem();
-            ItemStack item2 = schematicContainerItemsNonNullList.get(i).copy();
-            int currNum = item1.getCount();
-            int tarNum = item2.getCount();
-            boolean same = ItemStack.isSameItemSameComponents(item1, item2);
+        for (Slot slot : sc.slots) {
+            // 過濾掉不屬於這個箱子的格位
+            if (slot.container != targetContainer) continue;
+
+            // 獲取該格在容器內部的原始索引
+            int containerSlotIndex = slot.getContainerSlot();
+
+            // 確保不會超出藍圖數據的範圍
+            if (containerSlotIndex >= schematicContainerItemsNonNullList.size()) continue;
+
+            ItemStack itemInSlot = slot.getItem(); // 容器裡的物品
+            ItemStack schematicStack = schematicContainerItemsNonNullList.get(containerSlotIndex); // 藍圖要求的物品
+            int currNum = itemInSlot.getCount();
+            int tarNum = schematicStack.getCount();
+            boolean same = ItemStack.isSameItemSameComponents(itemInSlot, schematicStack);
             if (same && currNum == tarNum) continue; // 數量物品相同時 不和背包交互
 
             if (same) {
-                //有多
+                // 相同但有多
                 while (currNum > tarNum) {
-                    client.gameMode.handleInventoryMouseClick(sc.containerId, i, 0, ClickType.THROW, client.player);
+                    client.gameMode.handleInventoryMouseClick(sc.containerId, slot.index, 0, ClickType.THROW, client.player);
                     currNum--;
                 }
             } else {
-                //不同直接扔出
-                client.gameMode.handleInventoryMouseClick(sc.containerId, i, 1, ClickType.THROW, client.player);
+                // 不同直接扔出
+                client.gameMode.handleInventoryMouseClick(sc.containerId, slot.index, 1, ClickType.THROW, client.player);
                 currNum = 0;
             }
 
             //背包交互
-            for (int j = containerActualSize; j < sc.slots.size(); j++) {
-                // 補充完畢直接跳過
+            for (int j = containerSize; j < sc.slots.size(); j++) {
+                // 補充完畢跳出
                 if (currNum == tarNum) break;
 
+                // 不符合條件跳過
                 ItemStack playerItem = sc.slots.get(j).getItem();
-                boolean same2 = ItemStack.isSameItemSameComponents(item2, playerItem);
+                boolean same2 = ItemStack.isSameItemSameComponents(schematicStack, playerItem);
                 if (playerItem.isEmpty() || !same2) continue;
 
-                // 拿取物品
+                // 取德物品數量
                 int playerItemCount = playerItem.getCount();
+
                 // 拿取背包物品，不管如何都要先拿起
                 client.gameMode.handleInventoryMouseClick(sc.containerId, j, 0, ClickType.PICKUP, client.player);
-                if (tarNum - currNum >= playerItemCount) { // 可直接全部移入
+
+                if ((tarNum - currNum) >= playerItemCount) { // 可直接全部移入
+
                     // 把手上的全部放到箱子
-                    client.gameMode.handleInventoryMouseClick(sc.containerId, i, 0, ClickType.PICKUP, client.player);
+                    client.gameMode.handleInventoryMouseClick(sc.containerId, slot.index, 0, ClickType.PICKUP, client.player);
                     currNum += playerItemCount;
-                    // 如果有多 放回背包
-                    if (!sc.getCarried().isEmpty()) {
-                        client.gameMode.handleInventoryMouseClick(sc.containerId, j, 0, ClickType.PICKUP, client.player);
-                    }
+
                 } else { // 需要一個一個移入
+
                     // 一個一個移入
                     for (; currNum < tarNum && playerItemCount > 0; playerItemCount--) {
-                        client.gameMode.handleInventoryMouseClick(sc.containerId, i, 1, ClickType.PICKUP, client.player);
+                        client.gameMode.handleInventoryMouseClick(sc.containerId, slot.index, 1, ClickType.PICKUP, client.player);
                         currNum++;
                     }
-                    // 放回背包
+                }
+
+                // 如果有多，放回背包
+                if (!sc.getCarried().isEmpty()) {
                     client.gameMode.handleInventoryMouseClick(sc.containerId, j, 0, ClickType.PICKUP, client.player);
                 }
             }
 
             if (tarNum > currNum) {
-                Item type = schematicContainerItemsNonNullList.get(i).getItem();
+                Item type = schematicContainerItemsNonNullList.get(slot.index).getItem();
                 misItems.put(type, misItems.getOrDefault(type, 0) + (tarNum - currNum));
             }
         }
-
-        client.player.closeContainer();
 
         return misItems;
     }
@@ -320,15 +361,18 @@ public class SchematicSync {
         switch (schematicSyncState) {
             case FIND_AND_CHECK_CONTAINER -> {
                 // 已完成全部清單
-                if (schematicSyncList.isEmpty()) {
+                if (schematicSyncList.isEmpty() && tempBlockPos == null) {
                     schematicSyncState = SchematicSyncState.IDLE;
                     client.gui.setOverlayMessage(Component.nullToEmpty("藍圖容器同步完成"), false);
                     return;
                 }
 
-                if (tempBlockPos != null && ConfigUtils.canInteracted(tempBlockPos)) {
+                // 尋找目標容器
+                if (tempBlockPos != null) {
                     // 優先使用沒確認的方塊座標
-                    blockPos = tempBlockPos;
+                    if (ConfigUtils.canInteracted(tempBlockPos)) {
+                        blockPos = tempBlockPos;
+                    }
                 } else {
                     // 尋找第一個可觸碰的方塊
                     blockPos = null;
@@ -340,7 +384,7 @@ public class SchematicSync {
                     }
                 }
 
-                if (blockPos == null) {
+                if (blockPos == null) { // 範圍內無符合容器
                     client.gui.setOverlayMessage(Component.nullToEmpty("距離過遠"), false);
                     return;
                 }
@@ -349,48 +393,74 @@ public class SchematicSync {
                 ContainerResult result = canContainerOpen(blockPos);
                 if (!result.canOpen) {
                     client.gui.setOverlayMessage(Component.nullToEmpty(result.message()), false);
+
                     schematicSyncList.remove(blockPos);
                     highlightTargetPosList.remove(blockPos);
                     highlightErrorPosList.add(blockPos);
                     return;
                 }
 
-                if (openRetryTimer <= 0) { // 超時 2 秒執行重新開啟
-                    openContainer(blockPos);
+                // 開啟容器
+                if (openRetryTimer <= 0) { // 超時歸零執行重新開啟
                     openRetryTimer = Configs.Core.RETRY_THRESHOLD.getIntegerValue();
                     client.gui.setOverlayMessage(Component.nullToEmpty("嘗試開啟容器..."), false);
+                    openContainer(blockPos);
                 }
             }
 
             case FILLING_CONTAINER -> {
-                // 確保現在開著的確實是容器，且不是玩家自己的背包
                 if (client.player == null ) return;
 
+                // 確保現在開著的確實是容器，不是玩家自己的背包
                 if (client.player.containerMenu.equals(client.player.inventoryMenu)) {
+// 這邊會判斷錯，先直接重新判斷
+//                    // 超時計時器
+//                    if (openRetryTimer > 0) {
+//                        return;
+//                    }
+//
+//                    // 超時判定為失敗
+//                    client.gui.setOverlayMessage(Component.nullToEmpty("開啟容器超時"), false);
+//                    schematicSyncList.remove(blockPos);
+//                    highlightTargetPosList.remove(blockPos);
+//                    highlightErrorPosList.add(blockPos);
+                    schematicSyncState = SchematicSyncState.FIND_AND_CHECK_CONTAINER;
                     return;
                 }
+
+                // 重製計時器
+                openRetryTimer = 0;
 
                 // 執行填充邏輯
                 NonNullList<ItemStack> schematicContainerItemsNonNullList = getContainerItemsFromSchematic(blockPos);
                 missingItems = fillContainerAndReturnMissing(schematicContainerItemsNonNullList);
 
+                // 關閉箱子
+                client.player.closeContainer();
+
                 // 根據不同情況，渲染箱子顏色，切換到不同狀態機
                 schematicSyncList.remove(blockPos);
                 highlightTargetPosList.remove(blockPos);
+
                 if (missingItems.isEmpty()) { // 同步完成可以進入下一個
                     tempBlockPos = null;
                     schematicSyncState = SchematicSyncState.FIND_AND_CHECK_CONTAINER;
                 } else { // 需要等待物品
                     tempBlockPos = blockPos;
                     highlightMissingPosList.add(blockPos);
+
                     schematicSyncState = SchematicSyncState.WAITING_ITEMS;
                 }
+
+                // 冷卻重設
+                schematicSyncCooldown = Configs.Core.SYNC_INVENTORY_RATE.getIntegerValue();
             }
 
             case WAITING_ITEMS -> {
                 if (haveAnyItemInInv(missingItems)) {
                     highlightMissingPosList.remove(tempBlockPos);
                     highlightTargetPosList.add(tempBlockPos);
+
                     schematicSyncState = SchematicSyncState.FIND_AND_CHECK_CONTAINER;
                     return;
                 }
@@ -398,16 +468,16 @@ public class SchematicSync {
                 List<String> names = missingItems.entrySet().stream()
                         .map(e -> {
                             //#if MC >= 11900
-                            return net.minecraft.network.chat.Component.translatable(e.getKey().getDescriptionId()).getString() + " x" + e.getValue();
+                            return Component.translatable(e.getKey().getDescriptionId()).getString() + " x" + e.getValue();
                             //#else
-                            //$$ return new net.minecraft.network.chat.TranslatableComponent(e.getKey().getDescriptionId()).getString() + " x" + e.getValue();
+                            //$$ return new TranslatableComponent(e.getKey().getDescriptionId()).getString() + " x" + e.getValue();
                             //#endif
                         })
-                        //#if MC >= 11900
-                        .toList();
-                //#else
-                //$$ .collect(java.util.stream.Collectors.toList());
-                //#endif
+                    //#if MC >= 11900
+                    .toList();
+                    //#else
+                    //$$ .collect(java.util.stream.Collectors.toList());
+                    //#endif
 
                 String display;
                 if (names.size() > 3) {
@@ -415,7 +485,6 @@ public class SchematicSync {
                 } else {
                     display = String.join(", ", names);
                 }
-
                 client.gui.setOverlayMessage(Component.nullToEmpty("缺少物品: " + display), false);
             }
 
@@ -427,26 +496,28 @@ public class SchematicSync {
         // 閒置狀態直接跳出
         if (schematicSyncState == SchematicSyncState.IDLE) return;
 
+        // 超時計算
         if (openRetryTimer > 0) {
             openRetryTimer--;
         }
 
-        // 每 tick 冷卻 -1
+        // 冷卻時間
         if (schematicSyncCooldown > 1) {
             schematicSyncCooldown--;
-        } else {
-            if (schematicSyncState != SchematicSyncState.FIND_AND_CHECK_CONTAINER) {
-                schematicSyncCooldown = Configs.Core.SYNC_INVENTORY_RATE.getIntegerValue();
-            }
-            schematicSyncInv();
+            return;
         }
+
+        // 執行操作
+        schematicSyncInv();
     }
 
     public static void stopSync() {
         schematicSyncState = SchematicSyncState.IDLE;
+
         highlightTargetPosList.clear();
         highlightMissingPosList.clear();
         highlightErrorPosList.clear();
+
         schematicSyncList.clear();
     }
 }
