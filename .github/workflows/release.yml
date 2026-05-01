@@ -39,45 +39,45 @@ jobs:
           \
           EOF
 
-  changelog:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GH_USERNAME: ${{ secrets.GH_USERNAME }}
-    steps:
-      - name: 检出完整仓库
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: 生成发布相关信息
-        id: release_info_for_changelog
-        run: |
-          if [ $GITHUB_EVENT_NAME == 'release' ]
-          then
-              echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          elif [ $GITHUB_EVENT_NAME == 'workflow_dispatch' ]
-          then
-              echo "tag_name=${{ github.event.inputs.target_release_tag }}" >> $GITHUB_OUTPUT
-          else
-              echo 未知 GitHub 事件类型 $GITHUB_EVENT_NAME
-              exit 1
-          fi
-
-      - name: 安装 git-cliff
-        uses: taiki-e/install-action@git-cliff
-
-      - name: 生成更新日志
-        run: git-cliff --latest -o CHANGELOG.md
-
-      - name: 上传更新日志到 Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.release_info_for_changelog.outputs.tag_name }}
-          body_path: CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#  changelog:
+#    runs-on: ubuntu-latest
+#    continue-on-error: true
+#    env:
+#      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      GH_USERNAME: ${{ secrets.GH_USERNAME }}
+#    steps:
+#      - name: 检出完整仓库
+#        uses: actions/checkout@v6
+#        with:
+#          fetch-depth: 0
+#
+#      - name: 生成发布相关信息
+#        id: release_info_for_changelog
+#        run: |
+#          if [ $GITHUB_EVENT_NAME == 'release' ]
+#          then
+#              echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+#          elif [ $GITHUB_EVENT_NAME == 'workflow_dispatch' ]
+#          then
+#              echo "tag_name=${{ github.event.inputs.target_release_tag }}" >> $GITHUB_OUTPUT
+#          else
+#              echo 未知 GitHub 事件类型 $GITHUB_EVENT_NAME
+#              exit 1
+#          fi
+#
+#      - name: 安装 git-cliff
+#        uses: taiki-e/install-action@git-cliff
+#
+#      - name: 生成更新日志
+#        run: git-cliff --latest -o CHANGELOG.md
+#
+#      - name: 上传更新日志到 Release
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          tag_name: ${{ steps.release_info_for_changelog.outputs.tag_name }}
+#          body_path: CHANGELOG.md
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # 验证输入的 release tag 是否有效
   validate_release:
