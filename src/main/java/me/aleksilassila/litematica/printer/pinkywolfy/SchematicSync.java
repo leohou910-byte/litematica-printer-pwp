@@ -519,5 +519,6 @@ public class SchematicSync {
         highlightErrorPosList.clear();
 
         schematicSyncList.clear();
+        tempBlockPos = null;
     }
 }
