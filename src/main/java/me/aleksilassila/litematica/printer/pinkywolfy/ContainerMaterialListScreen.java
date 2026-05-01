@@ -1,4 +1,4 @@
-package me.aleksilassila.litematica.printer.PinkyWolfy;
+package me.aleksilassila.litematica.printer.pinkywolfy;
 
 import fi.dy.masa.litematica.gui.GuiMaterialList;
 import fi.dy.masa.litematica.materials.MaterialListBase;

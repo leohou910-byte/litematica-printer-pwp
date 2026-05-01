@@ -1,6 +1,6 @@
 package me.aleksilassila.litematica.printer.mixin;
 
-import me.aleksilassila.litematica.printer.PinkyWolfy.SchematicSync;
+import me.aleksilassila.litematica.printer.pinkywolfy.SchematicSync;
 import me.aleksilassila.litematica.printer.printer.zxy.inventory.InventoryUtils;
 import me.aleksilassila.litematica.printer.printer.zxy.inventory.SwitchItem;
 import net.minecraft.client.Minecraft;
