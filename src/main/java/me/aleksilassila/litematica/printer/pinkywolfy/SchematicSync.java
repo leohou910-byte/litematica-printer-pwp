@@ -11,7 +11,7 @@ import me.aleksilassila.litematica.printer.printer.PlayerLook;
 import me.aleksilassila.litematica.printer.printer.PrinterBox;
 import me.aleksilassila.litematica.printer.printer.zxy.inventory.InventoryUtils;
 import me.aleksilassila.litematica.printer.printer.zxy.utils.HighlightBlockRenderer;
-import me.aleksilassila.litematica.printer.utils.ConfigUtils;
+import me.aleksilassila.litematica.printer.utils.PlayerUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -370,14 +370,14 @@ public class SchematicSync {
                 // 尋找目標容器
                 if (tempBlockPos != null) {
                     // 優先使用沒確認的方塊座標
-                    if (ConfigUtils.canInteracted(tempBlockPos)) {
+                    if (PlayerUtils.canInteracted(tempBlockPos)) {
                         blockPos = tempBlockPos;
                     }
                 } else {
                     // 尋找第一個可觸碰的方塊
                     blockPos = null;
                     for (BlockPos pos : schematicSyncList) {
-                        if (ConfigUtils.canInteracted(pos)) {
+                        if (PlayerUtils.canInteracted(pos)) {
                             blockPos = pos;
                             break;
                         }
